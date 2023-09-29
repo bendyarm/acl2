@@ -45,10 +45,11 @@
 
 
 (defmacro without-interrupts (&rest body)
-  `(#+ccl ccl::without-interrupts #+sb-sys:without-interrupts
+  `(#+ccl ccl::without-interrupts #+sbcl sb-sys:without-interrupts
           ,@body))
 
-#+sbcl (defun %check-generic-sequence-bounds (seq start end)
+#+sbcl
+(defun %check-generic-sequence-bounds (seq start end)
   (let ((length (sb-sequence:length seq)))
     (if (<= 0 start (or end length) length)
         (or end length)
