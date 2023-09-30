@@ -160,12 +160,12 @@
   ;; output.
   (declare (type string type content))
   (debug "Send plain message on ~a: ~a~%" type content)
-  (ccl::without-interrupts (write-string type stream)
-                           (write-char #\Space stream)
-                           (prin1 (length content) stream)
-                           (write-char #\Newline stream)
-                           (write-string content stream)
-                           (write-char #\Newline stream)))
+  (without-interrupts (write-string type stream)
+                      (write-char #\Space stream)
+                      (prin1 (length content) stream)
+                      (write-char #\Newline stream)
+                      (write-string content stream)
+                      (write-char #\Newline stream)))
 
 (defclass bridge-ostream (cl-user::fundamental-character-output-stream)
   ;; Special output stream that gets used to distinguish different kinds of
