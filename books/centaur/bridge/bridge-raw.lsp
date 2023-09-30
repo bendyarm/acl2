@@ -537,7 +537,7 @@ This is a trace-co test"))
                                             :name "STDOUT")))
      (with-output-to ostream
        (send-message "ACL2_BRIDGE_HELLO"
-                     (process-thread-name current-process-thread) stream)
+                     (process-thread-name *current-process-thread*) stream)
                      (loop while (worker-do-work stream))
                      (close stream)))
    (error (condition)
@@ -786,7 +786,7 @@ This is a trace-co test"))
   (let ((process (bridge::find-process name)))
     (unless process
       (format *terminal-io* "~a: Can't interrupt ~a, process not found.\n"
-              (process-thread-name current-process-thread)
+              (process-thread-name *current-process-thread*)
               name)
       ;(format t "Can't interrupt ~a, process not found.\n" name)
       (return-from interrupt nil))
