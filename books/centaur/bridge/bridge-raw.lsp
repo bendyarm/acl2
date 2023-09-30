@@ -40,9 +40,8 @@
   `(#+ccl ccl::process-name #+sbcl sb-thread:thread-name
           ,@body))
 
-(defconstant current-process-thread
+(define-symbol-macro *current-process-thread*
   #+ccl ccl::*current-process* #+sbcl sb-thread:*current-thread*)
-
 
 (defmacro without-interrupts (&rest body)
   `(#+ccl ccl::without-interrupts #+sbcl sb-sys:without-interrupts
@@ -133,12 +132,12 @@
 (defconstant bridge-default-port 55433)
 
 (defmacro debug (msg &rest args)
-  ;;  nil
+  nil
   ;;  For hacking on the bridge, uncomment this to watch what's happening.
-  `(format *terminal-io*
-           (concatenate 'string "Bridge: ~a: " ,msg)
-           (process-thread-name current-process-thread)
-           . ,args)
+  ;; `(format *terminal-io*
+  ;;          (concatenate 'string "Bridge: ~a: " ,msg)
+  ;;          (process-thread-name *current-process-thread*)
+  ;;          . ,args)
   )
 
 (defmacro alert (msg &rest args)
@@ -146,7 +145,7 @@
   `(format *terminal-io*
            (concatenate 'string "Bridge: ~a: " ,msg)
            ;; (ccl::process-name ccl::*current-process*)
-           (process-thread-name current-process-thread)
+           (process-thread-name *current-process-thread*)
            . ,args))
 
 ; Writing Messages -----------------------------------------------------------
