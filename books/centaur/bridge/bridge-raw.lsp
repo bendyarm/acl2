@@ -151,7 +151,21 @@
 ; Writing Messages -----------------------------------------------------------
 
 ; We write an output stream class for wrapping up ordinary printed output
-; (e.g., from things like FOR
+; (e.g., from things like FORMAT, CW, etc.) into messages.  This lets us send
+; all output to the client in a uniform way.
+
+(defun send-message (type content stream)
+  ;; Basic routine for sending strings as messages.  This gets used for error
+  ;; messages and sending results (after encoding them as json), but not for
+  ;; output.
+  (declare (type string type content))
+  (debug "Send plain message on ~a: ~a~%" type content)
+  (ccl::without-interrupts (write-string type stream)
+                           (write-char #\Space stream)
+                           (prin1 (length content) stream)
+                           (write-char #\Newline stream)
+                           (write-string content stream)
+                           (write-char #\Newline stream)))
 
 (defclass bridge-ostream (cl-user::fundamental-character-output-stream)
   ;; Special output stream that gets used to distinguish different kinds of
