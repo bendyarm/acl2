@@ -1,8 +1,8 @@
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
                      RUBY INTERFACE TO THE ACL2 BRIDGE
 
--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 Files:
 
@@ -17,7 +17,7 @@ Files:
                     applications that want to send form input to ACL2.
 
 
-Supporting software:
+Supporting software(*1):
 
    Ruby Version: 1.9.3p0
 
@@ -50,4 +50,34 @@ Questions:
 
    For help, ask Jared Davis <jared@centtech.com>
 
--------------------------------------------------------------------------------
+
+Footnotes:
+
+(*1) Ruby Version and Installation Notes
+
+   * This script Has been lightly tested on more recent Ruby Versions like:
+     ruby 3.0.2p107 (2021-07-07 revision 0db68f0233) [x86_64-linux-gnu]
+
+   * To see if you have a gem installed, use "gem info".  For example,
+
+        gem info getopt
+	gem info hash_keyword_args
+
+   * If you do not have the gems installed, you will need to find out where
+     in the gem path you want to install them.  Maybe best to do it under
+     your ~/.gem/ directory.  To find out where that is, do:
+
+        ruby -r rubygems -e "p Gem.path"
+
+     Generally you will see something like this:
+
+        ["/home/you/.local/share/gem/ruby/3.0.0", "/var/lib/gems/3.0.0", ..]
+
+     That first directory is a good plase to install them.
+
+   * Install the gems with commands like
+
+        gem install -i "/home/you/.local/share/gem/ruby/3.0.0" getopt
+        gem install -i "/home/you/.local/share/gem/ruby/3.0.0" hash_keyword_args
+
+--------------------------------------------------------------------------------
