@@ -30,11 +30,11 @@
 ; SBCL integration: Karthik Nukala <nukala@kestrel.edu>
 
 (in-package "BRIDGE")
-;; (asdf:load-system "usocket")
 
 ; SBCL porting macros ------------------------------------------------------
 
-#+sbcl (require 'sb-bsd-sockets)
+#+sbcl
+(require :sb-bsd-sockets)
 
 (defmacro process-thread-name (&rest body)
   `(#+ccl ccl::process-name #+sbcl sb-thread:thread-name
@@ -94,9 +94,44 @@
   `(#+ccl ccl::getenv #+sbcl sb-ext:posix-getenv
           ,@body))
 
-(defmacro make-socket-stream (&rest body)
-  `(#+ccl ccl::make-socket #+sbcl sb-bsd-sockets:socket-make-stream
-          ,@body))
+; Does not yet support ipv6
+(defun make-network-socket-and-listen (port-number)
+  ;; A passive socket used to listen for incoming TCP/IP connections
+  ;; on port-number.
+  ;; Makes the socket and starts listening to it.
+  ;; Similar to usocket's socket-listen-internal
+  #+ccl
+  (ccl::make-socket :address-family :internet
+                    :connect :passive
+                    :local-port port-number
+                    :reuse-address t)
+  #+sbcl
+  (let ((sock (make-instance 'sb-bsd-sockets:inet-socket
+                             :type :stream
+                             :protocol :tcp)))
+    ;; Possibly we should do this:
+    ;;    (setf (sb-bsd-sockets:sockopt-reuse-address sock) t)
+    ;; Address of nil means try all network interfaces:
+    (sb-bsd-sockets:socket-bind sock nil port-number)
+    (sb-bsd-sockets:socket-listen sock 5) ; the backlog of 5 is also the default for ccl
+    sock))
+
+(defun make-domain-socket-and-listen (filename)
+  ;; A passive socket used to listen for incoming local (aka UNIX) domain
+  ;; connections on the  named by filename.
+  ;; Makes the socket and starts listening to it.
+  ;; Similar to usocket's socket-listen-internal
+  #+ccl
+  (ccl::make-socket :address-family :file
+                    :connect :passive
+                    :local-filename filename)
+  #+sbcl
+  (let ((sock (make-instance 'sb-bsd-sockets:local-socket
+                             :type :stream
+                             :protocol 0)))
+    (sb-bsd-sockets:socket-bind sock filename nil)
+    (sb-bsd-sockets:socket-listen sock 5) ; the backlog of 5 is also the default for ccl
+    sock))
 
 (defmacro all-threads-processes (&rest body)
   `(#+ccl ccl::all-processes #+sbcl sb-thread:list-all-threads
@@ -129,7 +164,7 @@
 (defun sleep$ (n)
   (sleep n))
 
-(defconstant bridge-default-port 55433)
+(defconstant *bridge-default-port* 55433)
 
 (defmacro debug (msg &rest args)
   nil
@@ -745,7 +780,6 @@ This is a trace-co test"))
             (debug "Releasing lock on main thread.~%")
             (release-mutex-lock *main-thread-lock*)))))
 
-
 (defun start-fn (socket-name-or-port-number
                  stack-size
                  tstack-size
@@ -755,21 +789,17 @@ This is a trace-co test"))
   (setq *worker-vstack-size* tstack-size)
   (setq *worker-tstack-size* vstack-size)
   (unless socket-name-or-port-number
-    (setq socket-name-or-port-number bridge-default-port))
+    (setq socket-name-or-port-number *bridge-default-port*))
   (format t "Starting ACL2 Bridge on ~a, ~a~%"
           (getenv "HOSTNAME")
           socket-name-or-port-number)
-  (let ((sock (cond ((natp socket-name-or-port-number)
-                     (make-socket-stream :connect :passive
-                                         :local-port socket-name-or-port-number
-                                         :reuse-address t))
-                    ((stringp socket-name-or-port-number)
-                     (make-socket-stream :address-family :file
-                                         :connect :passive
-                                         :local-filename socket-name-or-port-number))
+  (let ((sock (cond ((natp socket-name-or-port-number) ; network socket case
+                     (make-network-socket-and-listen socket-name-or-port-number))
+                    ((stringp socket-name-or-port-number)  ; local (unix) domain socket
+                     (make-domain-socket-and-listen socket-name-or-port-number))
                     (t
                      (er hard? 'start-fn "Expected socket-name-or-port-number ~
-                                          to be a string (for a socket name) ~
+                                          to be a string (for a domain socket name) ~
                                           or a natural number (for a tcp/ip ~
                                           port), but found ~x0."
                          socket-name-or-port-number)))))
