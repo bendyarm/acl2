@@ -58,9 +58,21 @@
   `(#+ccl ccl::check-sequence-bounds #+sbcl %check-generic-sequence-bounds
           ,@body))
 
-(defmacro accept-socket (&rest body)
-  `(#+ccl ccl::accept-connection #+sbcl sb-bsd-sockets:socket-accept
-          ,@body))
+(defun accept-socket (sock)
+  #+ccl
+  ;; returns a socket stream, usually either
+  ;; BASIC-TCP-STREAM or FUNDAMENTAL-FILE-SOCKET-STREAM
+  (ccl::accept-connection sock)
+  #+sbcl
+  (multiple-value-bind (client-socket peer-address)
+      (sb-bsd-sockets:socket-accept sock)
+    (declare (ignore peer-address))
+    (sb-bsd-sockets:socket-make-stream
+     client-socket
+     :input t :output t
+     :buffering :full
+     ;; Probably don't need :element-type
+     )))
 
 (defmacro close-socket (&rest body)
   `(#+ccl ccl::close #+sbcl sb-bsd-sockets:socket-close
