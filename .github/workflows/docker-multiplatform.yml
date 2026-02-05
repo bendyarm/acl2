@@ -104,12 +104,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        if: ${{ inputs.push_to_registry && secrets.DOCKERHUB_USERNAME != '' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # TODO: Add Docker Hub login when DOCKERHUB_USERNAME secret is configured
+      # (Can't conditionally check if secrets exist in workflow expressions)
 
       - name: Build Docker image
         id: build
@@ -177,12 +173,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # TODO: Add Docker Hub login when DOCKERHUB_USERNAME secret is configured
 
       - name: Create manifest and push to GHCR
         id: push
